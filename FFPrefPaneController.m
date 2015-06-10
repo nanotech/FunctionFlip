@@ -135,7 +135,7 @@
         NSLog(@"Couldn't get version: %@", error);
 		[updateSheetController updateFailed];
 	} else {
-        NSString *updateVersion = [[[NSString alloc] initWithData:versionData encoding:NSASCIIStringEncoding] autorelease];
+        NSString *updateVersion = [[NSString alloc] initWithData:versionData encoding:NSASCIIStringEncoding];
         NSLog(@"found version %@", updateVersion);
         if([updateVersion isEqualToString:[self bundleVersionNumber]]) {
 			[updateSheetController updateNotAvailable];
@@ -164,7 +164,7 @@
 -(void) addAppAsLoginItem:(NSString *)appPath {
 	// This will retrieve the path for the application
 	// For example, /Applications/test.app
-	CFURLRef url = (CFURLRef)[NSURL fileURLWithPath:appPath];
+	NSURL *url = [NSURL fileURLWithPath:appPath];
     
 	// Create a reference to the shared file list.
     // We are adding it to the current user only.
@@ -177,12 +177,12 @@
 		//Insert an item to the list.
 		LSSharedFileListItemRef item = LSSharedFileListInsertItemURL(loginItems,
                                                                      kLSSharedFileListItemLast, NULL, NULL,
-                                                                     url, NULL, NULL);
+                                                                     (__bridge CFURLRef)url, NULL, NULL);
 		if (item){
 			CFRelease(item);
         }
+        CFRelease(loginItems);
 	}
-	CFRelease(loginItems);
 }
 
 -(void) deleteAppFromLoginItem:(NSString *)appPath {
@@ -193,17 +193,16 @@
     
 	if (loginItems) {
 		UInt32 seedValue;
-		NSArray *loginItemsArray = (NSArray *)LSSharedFileListCopySnapshot(loginItems, &seedValue);
+		NSArray *loginItemsArray = (NSArray *)CFBridgingRelease(LSSharedFileListCopySnapshot(loginItems, &seedValue));
 		for(id itemRef in loginItemsArray) {
             //Resolve the item with URL
-			if (LSSharedFileListItemResolve((LSSharedFileListItemRef)itemRef, 0, &url, NULL) == noErr) {
-				NSString * urlPath = [(NSURL*)url path];
+			if (LSSharedFileListItemResolve((__bridge LSSharedFileListItemRef)itemRef, 0, &url, NULL) == noErr) {
+				NSString * urlPath = [(__bridge NSURL *)url path];
 				if ([urlPath isEqualToString:appPath]){
-					LSSharedFileListItemRemove(loginItems, (LSSharedFileListItemRef)itemRef);
+					LSSharedFileListItemRemove(loginItems, (__bridge LSSharedFileListItemRef)itemRef);
 				}
 			}
 		}
-		[loginItemsArray release];
 	}
 }
 

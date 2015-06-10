@@ -41,6 +41,6 @@
 - (BOOL)flipped;
 - (void)setFlipped:(BOOL)flipped;
 
-@property (readonly) NSString *keyId;
+@property (strong, readonly) NSString *keyId;
 
 @end

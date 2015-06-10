@@ -40,8 +40,8 @@
 - (id)initWithDDHidEvent:(DDHidEvent *)_event fromKeyboard:(FFKeyboard *)_keyboard;
 
 @property (readonly) DDHidElement *element;
-@property (retain) DDHidEvent *event;
-@property (retain) FFKeyboard *keyboard;
+@property (strong) DDHidEvent *event;
+@property (strong) FFKeyboard *keyboard;
 @property (readonly) BOOL isFkeyEvent;
 @property (readonly) NSString *keyId;
 @property (readonly) NSString *specialId;

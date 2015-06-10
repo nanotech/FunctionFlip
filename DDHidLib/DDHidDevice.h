@@ -64,7 +64,7 @@
                                 withClass: (Class) hidClass
                         skipZeroLocations: (BOOL) emptyLocation;
 
-+ (NSArray *) allDevicesMatchingCFDictionary: (CFDictionaryRef) matchDictionary
++ (NSArray *) allDevicesMatchingCFDictionary: (CFDictionaryRef) __attribute__((cf_consumed)) matchDictionary
                                    withClass: (Class) hidClass
                            skipZeroLocations: (BOOL) emptyLocation;
 

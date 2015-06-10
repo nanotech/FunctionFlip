@@ -29,7 +29,7 @@
 
 + (DDHidEvent *) eventWithIOHIDEvent: (IOHIDEventStruct *) event;
 {
-    return [[[self alloc] initWithIOHIDEvent: event] autorelease];
+    return [[self alloc] initWithIOHIDEvent: event];
 }
 
 - (id) initWithIOHIDEvent: (IOHIDEventStruct *) event;
@@ -46,7 +46,6 @@
 - (void) dealloc;
 {
     free(mEvent.longValue);
-    [super dealloc];
 }
 
 - (IOHIDElementType) type;

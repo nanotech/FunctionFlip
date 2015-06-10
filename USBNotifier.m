@@ -42,7 +42,7 @@ static void usbDeviceAdded(void *refCon, io_iterator_t iterator) {
 			}
 
 			// NSLog(@"USB Device Attached: %@" , deviceName);
-			[(FFHelperApp *)refCon keyboardListChanged];
+			[(__bridge FFHelperApp *)refCon keyboardListChanged];
 			CFRelease(deviceName);
 		}
 
@@ -64,13 +64,16 @@ static void usbDeviceRemoved(void *refCon, io_iterator_t iterator) {
 		CFStringRef deviceName = CFStringCreateWithCString(kCFAllocatorDefault,
 														   deviceNameChars,
 														   kCFStringEncodingASCII);
-		if (CFStringCompare(deviceName, CFSTR("OHCI Root Hub Simulation"), 0) == kCFCompareEqualTo)
+        if (CFStringCompare(deviceName, CFSTR("OHCI Root Hub Simulation"), 0) == kCFCompareEqualTo) {
+            CFRelease(deviceName);
 			deviceName = CFCopyLocalizedString(CFSTR("USB Bus"), "");
-		else if (CFStringCompare(deviceName, CFSTR("EHCI Root Hub Simulation"), 0) == kCFCompareEqualTo)
+        } else if (CFStringCompare(deviceName, CFSTR("EHCI Root Hub Simulation"), 0) == kCFCompareEqualTo) {
+            CFRelease(deviceName);
 			deviceName = CFCopyLocalizedString(CFSTR("USB 2.0 Bus"), "");
+        }
 
 		// NSLog(@"USB Device Detached: %@" , deviceName);
-		[(FFHelperApp *)refCon keyboardListChanged];
+		[(__bridge FFHelperApp *)refCon keyboardListChanged];
 		CFRelease(deviceName);
 
 		IOObjectRelease(thisObject);
@@ -138,7 +141,7 @@ void USBNotifier_init(FFHelperApp *delegate) {
 	CFRunLoopAddSource(CFRunLoopGetCurrent(),
 					   notificationRunLoopSource,
 					   kCFRunLoopDefaultMode);
-	registerForUSBNotifications((void *)delegate);
+	registerForUSBNotifications((__bridge void *)delegate);
 }
 
 void USBNotifier_dealloc(void) {

@@ -65,13 +65,11 @@
  
     if (![self initPropertiesWithError: error])
     {
-        [self release];
         return nil;
     }
     
     if (![self createDeviceInterfaceWithError: error])
     {
-        [self release];
         return nil;
     }
     
@@ -88,22 +86,15 @@
 //=========================================================== 
 - (void) dealloc
 {
-    [mDefaultQueue release];
     if (mDeviceInterface != NULL)
     {
         (*mDeviceInterface)->close(mDeviceInterface);
         (*mDeviceInterface)->Release(mDeviceInterface);
     }
-    [mElementsByCookie release];
-    [mElements release];
-    [mUsages release];
-    [mPrimaryUsage release];
-    [mProperties release];
     IOObjectRelease(mHidDevice);
     
     mProperties = nil;
     mDeviceInterface = NULL;
-    [super dealloc];
 }
 
 #pragma mark -
@@ -130,7 +121,7 @@
 	CFMutableDictionaryRef hidMatchDictionary =
         IOServiceMatching(kIOHIDDeviceKey);
     NSMutableDictionary * objcMatchDictionary =
-        (NSMutableDictionary *) hidMatchDictionary;
+        (__bridge NSMutableDictionary *) hidMatchDictionary;
     [objcMatchDictionary ddhid_setObject: [NSNumber numberWithUnsignedInt: usagePage]
                                forString: kIOHIDDeviceUsagePageKey];
     [objcMatchDictionary ddhid_setObject: [NSNumber numberWithUnsignedInt: usageId]
@@ -140,7 +131,7 @@
                               skipZeroLocations: skipZeroLocations];
 }
 
-+ (NSArray *) allDevicesMatchingCFDictionary: (CFDictionaryRef) matchDictionary
++ (NSArray *) allDevicesMatchingCFDictionary: (CFDictionaryRef) __attribute__((cf_consumed)) matchDictionary
                                    withClass: (Class) hidClass
                            skipZeroLocations: (BOOL) skipZeroLocations;
 {
@@ -220,8 +211,7 @@
     (*mDeviceInterface)->allocQueue(mDeviceInterface);
     if (queue == NULL)
         return nil;
-    return [[[DDHidQueue alloc] initWithHIDQueue: queue
-                                            size: size] autorelease];
+    return [[DDHidQueue alloc] initWithHIDQueue: queue size: size];
 }
 
 - (long) getElementValue: (DDHidElement *) element;
@@ -258,7 +248,7 @@
     if (mListenInExclusiveMode)
         options = kIOHIDOptionsTypeSeizeDevice;
     [self openWithOptions: options];
-    mDefaultQueue = [[self createQueueWithSize: [self sizeOfDefaultQueue]] retain];
+    mDefaultQueue = [self createQueueWithSize: [self sizeOfDefaultQueue]];
     [mDefaultQueue setDelegate: self];
     [self addElementsToDefaultQueue];
     [mDefaultQueue startOnCurrentRunLoop];
@@ -270,7 +260,6 @@
         return;
     
     [mDefaultQueue stop];
-    [mDefaultQueue release];
     mDefaultQueue = nil;
     [self close];
 }
@@ -452,8 +441,7 @@
         {
             NSXRaiseError(error);
         }
-        [device autorelease];
-        
+
         if (([device locationId] == 0) && skipZeroLocations)
             return;
         
@@ -471,8 +459,7 @@
             {
                 NSXRaiseError(error);
             }
-            [device autorelease];
-            
+
             [devices addObject: device];
         }
     }
@@ -505,14 +492,17 @@
     CFMutableDictionaryRef properties;
     NSXReturnError(IORegistryEntryCreateCFProperties(mHidDevice, &properties,
                                                      kCFAllocatorDefault, kNilOptions));
-    if (error)
-        goto done;
+    if (error) {
+        // Duplicate error handling because goto is forbidden in ARC scope
+        if (error_)
+            *error_ = error;
+        return result;
+    }
     
-    mProperties = (NSMutableDictionary *) properties;
+    mProperties = (__bridge_transfer NSMutableDictionary *) properties;
     NSArray * elementProperties = [mProperties ddhid_objectForString: kIOHIDElementKey];
     mElements = [DDHidElement elementsWithPropertiesArray: elementProperties];
-    [mElements retain];
-    
+
     unsigned usagePage = [mProperties ddhid_unsignedIntForString: kIOHIDPrimaryUsagePageKey];
     unsigned usageId = [mProperties ddhid_unsignedIntForString: kIOHIDPrimaryUsageKey];
     
@@ -536,9 +526,8 @@
     [self indexElements: mElements];
     result = YES;
     
-done:
-        if (error_)
-            *error_ = error;
+    if (error_)
+        *error_ = error;
     return result;
 }
 

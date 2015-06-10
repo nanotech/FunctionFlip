@@ -40,10 +40,10 @@ static FFPreferenceManager *sharedInstance = nil;
 
 - (id)valueForKey:(NSString *)key {
 	CFPreferencesAppSynchronize((CFStringRef)FF_PREFPANE_BUNDLE_IDENTIFIER);
-	id value = (id)CFPreferencesCopyAppValue((CFStringRef)key,
-        (CFStringRef)FF_PREFPANE_BUNDLE_IDENTIFIER);
+	id value = (id)CFBridgingRelease(CFPreferencesCopyAppValue((CFStringRef)key,
+        (CFStringRef)FF_PREFPANE_BUNDLE_IDENTIFIER));
 //	NSLog(@"ffprefmanager (%@) get: %@, %@", self, key, value);
-	return [value autorelease];
+	return value;
 }
 
 - (void)setValue:(id)value forKey:(NSString *)key {
